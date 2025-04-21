@@ -15,9 +15,28 @@ model User {
   email      String  @unique
   isVerified Boolean
   password   String
+  roleId     Int     @default(1)
+  role       Role    @relation(fields: [roleId], references: [id])
+  // User_Role  User_Role[]
 }
+
+// model User_Role {
+//   userId Int
+//   user   User @relation(fields: [userId], references: [id])
+//   roleId Int
+//   role   Role @relation(fields: [roleId], references: [id])
+
+//   @@id([userId, roleId])
+// }
 
 model Role {
   id   Int    @id @default(autoincrement())
   name String
+  user User[]
+  // User_Role User_Role[]
 }
+
+// enum Roles {
+//   User
+//   Event_Organizer
+// }

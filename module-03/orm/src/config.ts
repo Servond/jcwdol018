@@ -1,3 +1,3 @@
 import "dotenv/config";
 
-export const { PORT } = process.env;
+export const { PORT, SECRET_KEY } = process.env;

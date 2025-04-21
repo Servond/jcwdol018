@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { RegisterService } from "../services/auth.service";
+import { RegisterService, LoginService, GetAll } from "../services/auth.service";
 
 async function RegisterController (req: Request, res: Response, next: NextFunction) {
     try {
@@ -14,4 +14,30 @@ async function RegisterController (req: Request, res: Response, next: NextFuncti
     }
 }
 
-export { RegisterController}
+async function LoginController (req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await LoginService(req.body);
+
+        res.status(200).cookie("access_token", data.token).send({
+            message: "Login Berhasil",
+            user: data.user
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+async function UsersController (req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await GetAll();
+
+        res.status(200).send({
+            message: "Berhasil",
+            users: data
+        })
+    } catch (err) {
+        next(err);
+    }
+}
+
+export { RegisterController, LoginController, UsersController }
