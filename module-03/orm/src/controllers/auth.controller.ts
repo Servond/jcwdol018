@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { RegisterService, LoginService, GetAll } from "../services/auth.service";
 
+import { IUserReqParam } from "../custom";
+
 async function RegisterController (req: Request, res: Response, next: NextFunction) {
     try {
         const data = await RegisterService(req.body);
@@ -29,6 +31,8 @@ async function LoginController (req: Request, res: Response, next: NextFunction)
 
 async function UsersController (req: Request, res: Response, next: NextFunction) {
     try {
+        const user = req.user as IUserReqParam;
+        console.log(user);
         const data = await GetAll();
 
         res.status(200).send({
