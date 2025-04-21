@@ -23,7 +23,7 @@ async function LoginController (req: Request, res: Response, next: NextFunction)
         res.status(200).cookie("access_token", data.token).send({
             message: "Login Berhasil",
             user: data.user
-        })
+        });
     } catch(err) {
         next(err)
     }
