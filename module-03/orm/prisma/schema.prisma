@@ -17,6 +17,7 @@ model User {
   password   String
   roleId     Int     @default(1)
   role       Role    @relation(fields: [roleId], references: [id])
+  avatar     String?
   // User_Role  User_Role[]
 }
 
