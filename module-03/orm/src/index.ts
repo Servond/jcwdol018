@@ -1,4 +1,5 @@
 import express, { Application, Request, Response, NextFunction } from "express";
+import path from "path";
 
 import { PORT } from "./config";
 
@@ -19,7 +20,8 @@ app.get(
   }
 );
 
-app.use("/auth", AuthRouter)
+app.use("/auth", AuthRouter);
+app.use("/avt", express.static(path.join(__dirname, "./public/avatar")));
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
