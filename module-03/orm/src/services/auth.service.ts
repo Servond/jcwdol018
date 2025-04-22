@@ -3,6 +3,7 @@ import { IRegisterParam, ILoginParam } from "../interface/user.interface";
 import prisma from "../lib/prisma";
 import { hash, genSaltSync, compare } from "bcrypt";
 import { sign } from "jsonwebtoken";
+import { cloudinaryUpload, cloudinaryRemove } from "../utils/cloudinary";
 
 import { SECRET_KEY } from "../config";
 
@@ -99,4 +100,53 @@ async function LoginService(param: ILoginParam) {
   }
 }
 
-export { RegisterService, LoginService, GetAll };
+async function UpdateUserService(file: Express.Multer.File, email: string) {
+  let url = "";
+  try { 
+    const checkUser = await FindUserByEmail(email);
+
+    if (!checkUser) throw new Error("User not found");
+
+    await prisma.$transaction(async (t) => {
+      const { secure_url } = await cloudinaryUpload(file);
+      url = secure_url;
+      const splitUrl = secure_url.split("/");
+      const fileName = splitUrl[splitUrl.length - 1];
+
+      await t.user.update({
+        where: {
+          email: checkUser.email
+        },
+        data: {
+          avatar: fileName
+        }
+      })
+    })
+  } catch(err) {
+    await cloudinaryRemove(url);
+    throw err;
+  }
+}
+
+async function UpdateUserService2(file: Express.Multer.File, email: string) {
+  try { 
+    const checkUser = await FindUserByEmail(email);
+
+    if (!checkUser) throw new Error("User not found");
+
+    await prisma.$transaction(async (t) => {
+      await t.user.update({
+        where: {
+          email: checkUser.email
+        },
+        data: {
+          avatar: file.filename
+        }
+      })
+    })
+  } catch(err) {
+    throw err;
+  }
+}
+
+export { RegisterService, LoginService, GetAll, UpdateUserService, UpdateUserService2 };

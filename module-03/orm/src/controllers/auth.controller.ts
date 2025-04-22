@@ -3,6 +3,8 @@ import {
   RegisterService,
   LoginService,
   GetAll,
+  UpdateUserService,
+  UpdateUserService2
 } from "../services/auth.service";
 
 import { IUserReqParam } from "../custom";
@@ -48,8 +50,10 @@ async function UpdateProfileController(
 ) {
   try {
     const { file } = req;
-    console.log(file);
-    // const data = await LoginService(req.body);
+    const { email } = req.user as IUserReqParam;
+    // console.log(file);
+    if (!file) throw new Error("file not found");
+    await UpdateUserService(file, email);
 
     res.status(200).send({
       message: "Update Profile Berhasil",
@@ -58,6 +62,26 @@ async function UpdateProfileController(
     next(err);
   }
 }
+
+async function UpdateProfileController2(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { file } = req;
+      const { email } = req.user as IUserReqParam;
+      // console.log(file);
+      if (!file) throw new Error("file not found");
+      await UpdateUserService2(file, email);
+  
+      res.status(200).send({
+        message: "Update Profile Berhasil",
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 
 async function UsersController(
   req: Request,
@@ -78,4 +102,4 @@ async function UsersController(
   }
 }
 
-export { RegisterController, LoginController, UsersController, UpdateProfileController };
+export { RegisterController, LoginController, UsersController, UpdateProfileController, UpdateProfileController2 };
