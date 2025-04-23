@@ -5,8 +5,12 @@ import { PORT } from "./config";
 
 import AuthRouter from "./routers/auth.router";
 
+import { VerifyUserTask } from "./utils/cron/user-verify-task";
+
 const port = PORT || 8080;
 const app: Application = express();
+
+VerifyUserTask();
 
 app.use(express.json());
 app.get(

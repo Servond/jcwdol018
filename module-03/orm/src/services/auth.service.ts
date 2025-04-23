@@ -4,13 +4,18 @@ import prisma from "../lib/prisma";
 import { hash, genSaltSync, compare } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { cloudinaryUpload, cloudinaryRemove } from "../utils/cloudinary";
+import { Transporter } from "../utils/nodemailer";
+
+import handlebars from "handlebars";
+import path from "path";
+import fs from "fs";
 
 import { SECRET_KEY } from "../config";
 
 async function GetAll() {
   try {
     return await prisma.user.findMany();
-  } catch(err) {
+  } catch (err) {
     throw err;
   }
 }
@@ -66,6 +71,29 @@ async function RegisterService(param: IRegisterParam) {
         },
       });
 
+      const payload = {
+        email: user.email,
+      };
+  
+      const token = sign(payload, String(SECRET_KEY), { expiresIn: "15m" });
+
+      const templatePath = path.join(
+        __dirname,
+        "../templates",
+        "register-template.hbs"
+      );
+
+      const templateSource = fs.readFileSync(templatePath, "utf-8");
+      const compiledTemplate = handlebars.compile(templateSource);
+      const html = compiledTemplate({ email: param.email, fe_url: `http://localhost:3000/activation?token=${token}`})
+      
+      await Transporter.sendMail({
+        from: "EOHelper",
+        to: param.email,
+        subject: "Welcome",
+        html
+      });
+
       return user;
     });
 
@@ -89,12 +117,12 @@ async function LoginService(param: ILoginParam) {
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
-      role: user.role.name
-    }
+      role: user.role.name,
+    };
 
-    const token = sign(payload, String(SECRET_KEY), { expiresIn: "1h"});
+    const token = sign(payload, String(SECRET_KEY), { expiresIn: "1h" });
 
-    return {user: payload, token};
+    return { user: payload, token };
   } catch (err) {
     throw err;
   }
@@ -102,7 +130,7 @@ async function LoginService(param: ILoginParam) {
 
 async function UpdateUserService(file: Express.Multer.File, email: string) {
   let url = "";
-  try { 
+  try {
     const checkUser = await FindUserByEmail(email);
 
     if (!checkUser) throw new Error("User not found");
@@ -115,21 +143,21 @@ async function UpdateUserService(file: Express.Multer.File, email: string) {
 
       await t.user.update({
         where: {
-          email: checkUser.email
+          email: checkUser.email,
         },
         data: {
-          avatar: fileName
-        }
-      })
-    })
-  } catch(err) {
+          avatar: fileName,
+        },
+      });
+    });
+  } catch (err) {
     await cloudinaryRemove(url);
     throw err;
   }
 }
 
 async function UpdateUserService2(file: Express.Multer.File, email: string) {
-  try { 
+  try {
     const checkUser = await FindUserByEmail(email);
 
     if (!checkUser) throw new Error("User not found");
@@ -137,16 +165,41 @@ async function UpdateUserService2(file: Express.Multer.File, email: string) {
     await prisma.$transaction(async (t) => {
       await t.user.update({
         where: {
-          email: checkUser.email
+          email: checkUser.email,
         },
         data: {
-          avatar: file.filename
-        }
-      })
-    })
-  } catch(err) {
+          avatar: file.filename,
+        },
+      });
+    });
+  } catch (err) {
     throw err;
   }
 }
 
-export { RegisterService, LoginService, GetAll, UpdateUserService, UpdateUserService2 };
+async function VerifyUserService() {
+  try {
+    console.log("function ini berjalan")
+    await prisma.$transaction(async (t) => {
+      await t.user.updateMany({
+        where: {
+          isVerified: false
+        },
+        data: {
+          isVerified: true,
+        },
+      });
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export {
+  RegisterService,
+  LoginService,
+  GetAll,
+  UpdateUserService,
+  UpdateUserService2,
+  VerifyUserService
+};
